@@ -18,12 +18,13 @@ class TMPartsClient
 
     private Client $client;
 
-    public function __construct(
-        private readonly string $baseUri,
-        private readonly string $bearerToken,
-    ) {
+    public function __construct(string $baseUri, string $bearerToken)
+    {
         $this->client = new Client([
-            'base_uri' => $this->baseUri,
+            'base_uri' => $baseUri,
+            RequestOptions::HEADERS => [
+                'Authorization' => "Bearer {$bearerToken}",
+            ],
         ]);
     }
 
@@ -35,7 +36,7 @@ class TMPartsClient
      */
     public function getStockByArticle(string $article): array
     {
-        $response = $this->request('GET', '/StockByArticle', [
+        $response = $this->request('GET', 'StockByArticle', [
             'Article' => $article,
         ]);
 
@@ -50,14 +51,11 @@ class TMPartsClient
      */
     private function request(string $method, UriInterface|string $uri, array $body, array $options = []): ResponseInterface
     {
-        $options = array_merge($options, [
-            RequestOptions::JSON => $body,
-            RequestOptions::HEADERS => [...($options[RequestOptions::HEADERS] ?? []), ...[
-                'Authorization' => "Bearer {$this->bearerToken}",
-            ]]
+        return $this->client->request($method, $uri, [
+            ...$options, [
+                'json' => $body,
+            ],
         ]);
-
-        return $this->client->request($method, $uri, $options);
     }
 
     /**
